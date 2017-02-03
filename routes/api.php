@@ -22,7 +22,7 @@ Route::group(['prefix' =>'v1'],function() {
     Route::post('login', 'Controller@login');
     Route::post('register', 'Controller@register');
 
-    Route::group(['middleware'=>'guest'],function() {
+    Route::group(['middleware'=>'auth:api'],function() {
         Route::get('tasks', 'Controller@tasks');
         Route::post('task/create', 'Controller@new_task');
         Route::post('task/edit', 'Controller@edit_task');
