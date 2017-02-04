@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Photo;
 use App\Task;
 use App\User;
 use Illuminate\Support\Facades\Auth;
@@ -213,6 +214,137 @@ class Controller extends BaseController
             'status' => 1,
             'msg' => 'task deleted',
             'task_id' => $request->task_id
+        ]);
+    }
+
+    public function photos(Request $request)
+    {
+        $user = Auth::guard('api')->user();
+
+        $per_page = 15;
+        if ($request->has('per_page')) {
+            $per_page = $request->per_page;
+        }
+
+        return $user->photos()->paginate($per_page);
+    }
+
+    public function new_photo(Request $request)
+    {
+        $user = Auth::guard('api')->user();
+        $validation = Validator::make($request->all(), [
+            'photo' => 'required|mimes:jpeg,bmp,png'
+        ]);
+
+        if ($validation->fails()) {
+            return Response::json([
+                'status' => 0,
+                'msg' => 'complete fields',
+                'errors' => $validation->errors()
+            ], 200);
+        }
+
+        $new_photo = $user->photos()->create($request->except('photo'));
+
+        $photo_name = 'photo';
+        if($request->hasFile($photo_name))
+        {
+            $path = base_path();
+            $destinationPath = $path.'/uploads/photos/'; // upload path
+            $photo= $request->file($photo_name );
+            $extension = $photo->getClientOriginalExtension(); // getting image extension
+            $name = time().''.rand(11111,99999).'.'.$extension; // renameing image
+            $photo->move($destinationPath, $name); // uploading file to given path
+            $photo_url = 'uploads/photos/'.$name;
+            $new_photo->photo = $photo_url;
+            $new_photo->save();
+        }
+
+        return Response::json([
+            'status' => 1,
+            'msg' => 'new photo created',
+            'photo' => $new_photo
+        ]);
+    }
+
+    public function edit_photo($id, Request $request)
+    {
+        $user = Auth::guard('api')->user();
+        $validation = Validator::make($request->all(), [
+            'photo' => 'required|mimes:jpeg,bmp,png'
+        ]);
+
+        if ($validation->fails()) {
+            return Response::json([
+                'status' => 0,
+                'msg' => 'complete fields',
+                'errors' => $validation->errors()
+            ], 200);
+        }
+
+        $photo = Photo::find($id);
+
+        if(!$photo) {
+            return Response::json([
+                'status' => 0,
+                'msg' => 'can not find photo with photo_id'
+            ]);
+        }
+
+        if ($photo->user_id != $user->id) {
+            return Response::json([
+                'status' => 0,
+                'msg' => 'you are not authorized to edit this photo'
+            ]);
+        }
+
+        $photo_name = 'photo';
+        if($request->hasFile($photo_name))
+        {
+            $path = base_path();
+            $destinationPath = $path.'/uploads/photos/'; // upload path
+            $photo_file= $request->file($photo_name );
+            $extension = $photo_file->getClientOriginalExtension(); // getting image extension
+            $name = time().''.rand(11111,99999).'.'.$extension; // renameing image
+            $photo_file->move($destinationPath, $name); // uploading file to given path
+            $photo_url = 'uploads/photos/'.$name;
+            $photo->photo = $photo_url;
+            $photo->save();
+        }
+
+        return Response::json([
+            'status' => 1,
+            'msg' => 'photo edited',
+            'photo' => $photo
+        ]);
+    }
+
+    public function delete_photo($id, Request $request)
+    {
+        $user = Auth::guard('api')->user();
+
+        $photo = Photo::find($id);
+
+        if(!$photo) {
+            return Response::json([
+                'status' => 0,
+                'msg' => 'can not find photo with photo_id'
+            ]);
+        }
+
+        if ($photo->user_id != $user->id) {
+            return Response::json([
+                'status' => 0,
+                'msg' => 'you are not authorized to delete this photo'
+            ]);
+        }
+
+        $photo->delete();
+
+        return Response::json([
+            'status' => 1,
+            'msg' => 'photo deleted',
+            'photo_id' => $id
         ]);
     }
 }

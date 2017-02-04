@@ -27,5 +27,10 @@ Route::group(['prefix' =>'v1'],function() {
         Route::post('task/create', 'Controller@new_task');
         Route::post('task/edit', 'Controller@edit_task');
         Route::post('task/delete', 'Controller@delete_task');
+
+        Route::get('photos', 'Controller@photos');
+        Route::post('photo/create', 'Controller@new_photo');
+        Route::post('photo/{id}/edit', 'Controller@edit_photo');
+        Route::post('photo/{id}/delete', 'Controller@delete_photo');
     });
 });

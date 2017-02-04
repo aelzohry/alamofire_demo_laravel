@@ -5,6 +5,7 @@ namespace App;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Task;
+use App\Photo;
 
 class User extends Authenticatable
 {
@@ -21,6 +22,10 @@ class User extends Authenticatable
 
     public function tasks() {
         return $this->hasMany(Task::class);
+    }
+
+    public function photos() {
+        return $this->hasMany(Photo::class);
     }
 
     /**
